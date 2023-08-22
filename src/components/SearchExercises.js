@@ -1,11 +1,41 @@
 import React, { useEffect, useState } from "react";
 import { Box, Button, Stack, TextField, Typography } from "@mui/material";
+import { exerciseOptions, fetchData } from "../utils/fetchData";
+import HorizontalScrollbar from "../components/HorizontalScrollbar";
 
-const SearchExercises = () => {
+const SearchExercises = ({ setExercises, bodyPart, setBodyPart }) => {
   const [search, setSearch] = useState("");
+  const [bodyParts, setBodyParts] = useState([]);
+
+  useEffect(() => {
+    const fetchExercisesData = async () => {
+      const bodyPartsData = await fetchData(
+        "https://exercisedb.p.rapidapi.com/exercises/bodyPartList",
+        exerciseOptions
+      );
+
+      setBodyParts(["all", ...bodyPartsData]);
+    };
+    fetchExercisesData();
+  }, []);
+
   const handleSearch = async () => {
     if (search) {
-      // const exercisesData = await fetchData();
+      const exercisesData = await fetchData(
+        "https://exercisedb.p.rapidapi.com/exercises",
+        exerciseOptions
+      );
+
+      const searchedExercises = exercisesData.filter(
+        (exercise) =>
+          exercise.name.toLowerCase().includes(search) ||
+          exercise.target.toLowerCase().includes(search) ||
+          exercise.equipment.toLowerCase().includes(search) ||
+          exercise.bodyPart.toLowerCase().includes(search)
+      );
+
+      setSearch("");
+      setExercises(searchedExercises);
     }
   };
   return (
@@ -22,28 +52,18 @@ const SearchExercises = () => {
       <Box position="relative" mb="72px">
         <TextField
           sx={{
-            "& .MuiOutlinedInput-root": {
-              border: "none", // Remove default border
-              borderRadius: "4px",
-              backgroundColor: "transparent", // Ensure transparent background
-            },
-            "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: "#ffffff", // Set the border color
-            },
-            "& .MuiInputLabel-root": {
-              color: "#ffffff", // Set the input label color (placeholder color)
-            },
-            "& .MuiInputBase-input": {
-              color: "#ffffff", // Set the input text color
+            input: {
               fontWeight: "700",
+              border: "none",
+              borderRadius: "4px",
             },
             width: { lg: "800px", xs: "100%" },
-            //backgroundColor: "#ffffff",borderRadius:"40px"
+            backgroundColor: "#ffffff",
+            borderRadius: "10px",
           }}
           height="76px"
           value={search}
-          onchange={(e) => setSearch(e.target.value.toLowerCase())}
-          variant="outlined"
+          onChange={(e) => setSearch(e.target.value.toLowerCase())}
           placeholder="Search Exercises"
           type="text"
         />
@@ -63,6 +83,13 @@ const SearchExercises = () => {
         >
           Search
         </Button>
+      </Box>
+      <Box sx={{ position: "relative", width: "100%", p: "20px" }}>
+        <HorizontalScrollbar
+          data={bodyParts}
+          bodyPart={bodyPart}
+          setBodyPart={setBodyPart}
+        />
       </Box>
     </Stack>
   );
